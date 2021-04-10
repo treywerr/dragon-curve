@@ -1,4 +1,23 @@
 .canvas {
-	height: 1500px;
-	width: 1500px;
+	height: 500px;
+	width: 500px;
+	margin: auto;
+}
+
+.baseline {
+	stroke: blue;
+	stroke-width: 5;
+	fill: none;
+}
+
+.line {
+	stroke: red;
+	stroke-width: 3;
+	fill: none;
+}
+
+.diagline {
+	stroke: green;
+	stroke-width: 3;
+	fill: none;
 }
