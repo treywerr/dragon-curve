@@ -19,15 +19,18 @@ document.getElementById('canvas-div').appendChild(canvas);
 let colors = ['red', 'orangered', 'orange', 'yellow', 'greenyellow', 'green', 'turquoise', 'blue', 'indigo', 'purple'];
 let colorIndex = 0;
 
-const L = 256; // pixel length of line segments in baseline.
 const n = 8; // number of layers to generate (actual number of layers will be 2*n).
+var L = Math.pow(2, n); // pixel length of line segments in baseline.
+document.getElementById('nslider').setAttribute('max', 2*(n-1));
 
 let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-//let baselineCoords = [new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0)];
-let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)];
+//let baselineCoords = [new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0)]; // Corner
+//let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]; // Spiral
+let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
+//let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
 for (let i = 0; i < baselineCoords.length; i++) {
-    baselineCoords[i].x = (baselineCoords[i].x + .5)*L;
-    baselineCoords[i].y = (baselineCoords[i].y + .5)*L;
+    baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
+    baselineCoords[i].y = (baselineCoords[i].y + 1)*L;
 }
 let data = "M"+baselineCoords[0].x+' '+baselineCoords[0].y;
 for (let i = 1; i < baselineCoords.length; i++) {
