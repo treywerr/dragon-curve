@@ -22,7 +22,7 @@ let colorIndex = 0;
 const L = 256; // pixel length of line segments in baseline.
 
 let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-let baselineCoords = [new Point(L, L*3), new Point(L, L*2), new Point(2*L, L*2), new Point(2*L, L)]
+let baselineCoords = [new Point(L, L*2.5), new Point(L, L*1.5), new Point(2*L, L*1.5), new Point(2*L, L*.5)]
 let data = "M"+baselineCoords[0].x+' '+baselineCoords[0].y;
 for (let i = 1; i < baselineCoords.length; i++) {
     data += ' L'+baselineCoords[i].x+' '+baselineCoords[i].y;
@@ -30,16 +30,19 @@ for (let i = 1; i < baselineCoords.length; i++) {
 baseline.setAttributeNS(null, 'd', data);
 baseline.setAttributeNS(null, 'class', 'line');
 baseline.setAttributeNS(null, 'stroke', colors[colorIndex]);
+baseline.setAttributeNS(null, 'stroke-width', 8);
 
 canvas.appendChild(baseline);
 
-const n = 5; // number of iterations.
+const n = 8;
+
+let lines = [];
 
 let prevPoints = baselineCoords;
 let points = [];
 
-for (let i = 1; i <= n; i++) {
-    console.log("n = "+i);
+for (let i = 1; i < n; i++) {
+    //console.log("n = "+i);
     /* Generate points for line */
 
     let l = L/Math.pow(2, i);
@@ -48,10 +51,10 @@ for (let i = 1; i <= n; i++) {
         let p = prevPoints[j];
         let next = prevPoints[j+1];
         let v = new Point( next.x - p.x, next.y - p.y ); // Orientation of the parent line segment.
-        console.log("p = ("+p.x+','+p.y+')');
+        //console.log("p = ("+p.x+','+p.y+')');
         
         if (v.x == 0 && v.y < 0) { // North
-            console.log("North");
+            //console.log("North");
             if (j % 2 == 0) {
                 points.push(new Point(p.x-l, p.y));
                 points.push(new Point(p.x-l, p.y-l));
@@ -65,7 +68,7 @@ for (let i = 1; i <= n; i++) {
             }
         }
         if (v.x > 0 && v.y == 0) { // East
-            console.log("East");
+            //console.log("East");
             if (j % 2 == 0) {
                 points.push(new Point(p.x, p.y-l));
                 points.push(new Point(p.x+l, p.y-l));
@@ -79,7 +82,7 @@ for (let i = 1; i <= n; i++) {
             }
         }
         if (v.x == 0 && v.y > 0) { // South
-            console.log("South");
+            //console.log("South");
             if (j % 2 == 0) {
                 points.push(new Point(p.x+l, p.y));
                 points.push(new Point(p.x+l, p.y+l));
@@ -93,7 +96,7 @@ for (let i = 1; i <= n; i++) {
             }
         }
         if (v.x < 0 && v.y == 0) { // West
-            console.log("West");
+            //console.log("West");
             if (j % 2 == 0) {
                 points.push(new Point(p.x, p.y+l));
                 points.push(new Point(p.x-l, p.y+l));
@@ -113,7 +116,7 @@ for (let i = 1; i <= n; i++) {
     let data = 'M'+points[0].x+' '+points[0].y;
     let diagdata = data;
     for (let k = 1; k < points.length; k++) {
-        console.log("p = ("+points[k].x/L+','+points[k].y/L+')');
+        //console.log("p = ("+points[k].x/L+','+points[k].y/L+')');
         data += ' L'+points[k].x+' '+points[k].y;
         if (k % 2 == 0)
             diagdata += ' L'+points[k].x+' '+points[k].y;
@@ -127,13 +130,30 @@ for (let i = 1; i <= n; i++) {
     diagline.setAttributeNS(null, 'd', diagdata);
     diagline.setAttributeNS(null, 'class', 'line');
     diagline.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]);
+    diagline.setAttributeNS(null, 'visibility', 'hidden');
+    diagline.setAttributeNS(null, 'stroke-width', n-i);
     canvas.appendChild(diagline);
+    lines.push(diagline);
 
     line.setAttributeNS(null, 'd', data);
     line.setAttributeNS(null, 'class', 'line');
     line.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]);
+    line.setAttributeNS(null, 'visibility', 'hidden');
+    line.setAttributeNS(null, 'stroke-width', n-i);
     canvas.appendChild(line);
+    lines.push(line);
 
     prevPoints = points.slice();
     points = [];
+}
+
+var nslider = document.getElementById('nslider'); 
+nslider.oninput = function() {
+    for (let i = 0; i < lines.length; i++) {
+        if (i <= nslider.value-1) {
+            lines[i].setAttributeNS(null, 'visibility', 'visible');
+        } else {
+            lines[i].setAttributeNS(null, 'visibility', 'hidden');
+        }
+    }
 }
