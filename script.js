@@ -16,13 +16,19 @@ canvas.setAttributeNS(null, 'height', '100%');
 canvas.setAttributeNS(null, 'width', '100%');
 document.getElementById('canvas-div').appendChild(canvas);
 
-let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+let colors = ['red', 'orangered', 'orange', 'yellow', 'greenyellow', 'green', 'turquoise', 'blue', 'indigo', 'purple'];
 let colorIndex = 0;
 
 const L = 256; // pixel length of line segments in baseline.
+const n = 8; // number of layers to generate (actual number of layers will be 2*n).
 
 let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-let baselineCoords = [new Point(L, L*2.5), new Point(L, L*1.5), new Point(2*L, L*1.5), new Point(2*L, L*.5)]
+//let baselineCoords = [new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0)];
+let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)];
+for (let i = 0; i < baselineCoords.length; i++) {
+    baselineCoords[i].x = (baselineCoords[i].x + .5)*L;
+    baselineCoords[i].y = (baselineCoords[i].y + .5)*L;
+}
 let data = "M"+baselineCoords[0].x+' '+baselineCoords[0].y;
 for (let i = 1; i < baselineCoords.length; i++) {
     data += ' L'+baselineCoords[i].x+' '+baselineCoords[i].y;
@@ -30,13 +36,11 @@ for (let i = 1; i < baselineCoords.length; i++) {
 baseline.setAttributeNS(null, 'd', data);
 baseline.setAttributeNS(null, 'class', 'line');
 baseline.setAttributeNS(null, 'stroke', colors[colorIndex]);
-baseline.setAttributeNS(null, 'stroke-width', 8);
+baseline.setAttributeNS(null, 'stroke-width', n);
 
 canvas.appendChild(baseline);
 
-const n = 8;
-
-let lines = [];
+let lines = [baseline];
 
 let prevPoints = baselineCoords;
 let points = [];
@@ -129,9 +133,9 @@ for (let i = 1; i < n; i++) {
 
     diagline.setAttributeNS(null, 'd', diagdata);
     diagline.setAttributeNS(null, 'class', 'line');
-    diagline.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]);
-    diagline.setAttributeNS(null, 'visibility', 'hidden');
-    diagline.setAttributeNS(null, 'stroke-width', n-i);
+    diagline.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]); // Makes the line colors cycle through an array of rainbow colors
+    diagline.setAttributeNS(null, 'visibility', 'hidden'); // Lines are hidden by default until revealed by slider input
+    diagline.setAttributeNS(null, 'stroke-width', n-i); // Lines get progressively thinner
     canvas.appendChild(diagline);
     lines.push(diagline);
 
@@ -148,9 +152,21 @@ for (let i = 1; i < n; i++) {
 }
 
 var nslider = document.getElementById('nslider'); 
+var showAll = true;
+var showall = document.getElementById('showall');
+
+showall.oninput = function() {
+    showAll = showall.checked;
+    updateVisibility();
+}
+
 nslider.oninput = function() {
+    updateVisibility();
+}
+
+function updateVisibility() {
     for (let i = 0; i < lines.length; i++) {
-        if (i <= nslider.value-1) {
+        if (i == nslider.value || (i < nslider.value && showAll)) {
             lines[i].setAttributeNS(null, 'visibility', 'visible');
         } else {
             lines[i].setAttributeNS(null, 'visibility', 'hidden');
