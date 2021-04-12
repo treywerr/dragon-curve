@@ -10,6 +10,13 @@ body {
 
 .line {
 	fill: none;
+	animation-duration: 200s;
+    animation-timing-function: linear;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-fill-mode: forwards;
+    animation-name: dash;
 }
 
 .slider {
@@ -27,4 +34,10 @@ body {
 label {
 	font-family: Arial;
 	color: white;
+}
+
+@keyframes dash {
+	to {
+		stroke-dashoffset: 0;
+	}
 }

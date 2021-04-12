@@ -28,6 +28,7 @@ let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 //let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]; // Spiral
 let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
 //let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
+//let baselineCoords = [new Point(1,1), new Point(2,1)] // Single segment
 for (let i = 0; i < baselineCoords.length; i++) {
     baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
     baselineCoords[i].y = (baselineCoords[i].y + 1)*L;
@@ -37,9 +38,8 @@ for (let i = 1; i < baselineCoords.length; i++) {
     data += ' L'+baselineCoords[i].x+' '+baselineCoords[i].y;
 }
 baseline.setAttributeNS(null, 'd', data);
-baseline.setAttributeNS(null, 'class', 'line');
-baseline.setAttributeNS(null, 'stroke', colors[colorIndex]);
-baseline.setAttributeNS(null, 'stroke-width', n);
+setVisuals(baseline, 0);
+baseline.setAttributeNS(null, 'visibility', 'visible');
 
 canvas.appendChild(baseline);
 
@@ -135,18 +135,12 @@ for (let i = 1; i < n; i++) {
     let diagline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
     diagline.setAttributeNS(null, 'd', diagdata);
-    diagline.setAttributeNS(null, 'class', 'line');
-    diagline.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]); // Makes the line colors cycle through an array of rainbow colors
-    diagline.setAttributeNS(null, 'visibility', 'hidden'); // Lines are hidden by default until revealed by slider input
-    diagline.setAttributeNS(null, 'stroke-width', n-i); // Lines get progressively thinner
+    setVisuals(diagline, i);
     canvas.appendChild(diagline);
     lines.push(diagline);
 
     line.setAttributeNS(null, 'd', data);
-    line.setAttributeNS(null, 'class', 'line');
-    line.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]);
-    line.setAttributeNS(null, 'visibility', 'hidden');
-    line.setAttributeNS(null, 'stroke-width', n-i);
+    setVisuals(line, i);
     canvas.appendChild(line);
     lines.push(line);
 
@@ -154,9 +148,27 @@ for (let i = 1; i < n; i++) {
     points = [];
 }
 
+/**
+ * Sets all of the initial visual attributes of the line.
+ * @param {svg path} line -  the path object to manipulate.
+ * @param {integer} i - the layer the line is being drawn on.
+ */
+function setVisuals(line, i) {
+    line.setAttributeNS(null, 'class', 'line'); // Allows animation to run
+    line.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]); // Makes the line colors cycle through an array of rainbow colors
+    line.setAttributeNS(null, 'visibility', 'hidden'); // Lines are hidden by default until revealed by slider input
+    line.setAttributeNS(null, 'stroke-width', n-i); // Lines get progressively thinner
+    let pathLength = line.getTotalLength();
+    line.setAttributeNS(null, 'stroke-dasharray', pathLength + ' ' + pathLength);
+    line.setAttributeNS(null, 'stroke-dashoffset', 0);
+    line.setAttribute('animation-play-state', 'paused');
+}
+
 var nslider = document.getElementById('nslider'); 
 var showAll = true;
 var showall = document.getElementById('showall');
+var animate = false;
+var doAnimate = document.getElementById('doAnimate');
 
 showall.oninput = function() {
     showAll = showall.checked;
@@ -165,6 +177,12 @@ showall.oninput = function() {
 
 nslider.oninput = function() {
     updateVisibility();
+    updateAnimation();
+}
+
+doAnimate.oninput = function() {
+    animate = doAnimate.checked;
+    updateAnimation();
 }
 
 function updateVisibility() {
@@ -173,6 +191,18 @@ function updateVisibility() {
             lines[i].setAttributeNS(null, 'visibility', 'visible');
         } else {
             lines[i].setAttributeNS(null, 'visibility', 'hidden');
+        }
+    }
+}
+
+function updateAnimation() {
+    for (let i = 0; i < lines.length; i++) {
+        if (animate/* && i == nslider.value*/) {
+            lines[i].setAttributeNS(null, 'stroke-dashoffset', lines[i].getTotalLength());
+            lines[i].setAttribute('animation-play-state', 'running');
+        } else {
+            lines[i].setAttribute('animation-play-state', 'paused');
+            lines[i].setAttributeNS(null, 'stroke-dashoffset', 0);
         }
     }
 }
