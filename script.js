@@ -26,7 +26,9 @@ document.getElementById('nslider').setAttribute('max', 2*(n-1));
 let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 //let baselineCoords = [new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0)]; // Corner
 //let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]; // Spiral
-let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
+//let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(3, 1), new Point(3,2), new Point(4, 2)]; // Spiral
+let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]; // Squarepants
+//let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
 //let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
 //let baselineCoords = [new Point(1,1), new Point(2,1)] // Single segment
 for (let i = 0; i < baselineCoords.length; i++) {
