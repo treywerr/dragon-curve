@@ -12,18 +12,15 @@ class Point {
     }
 } // end class Point
 
-/* Set up canvas */
-let canvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-canvas.setAttributeNS(null, 'height', '100%');
-canvas.setAttributeNS(null, 'width', '100%');
-document.getElementById('canvas-div').appendChild(canvas);
-
 // Array of line colors to cycle through
 let colors = ['red', 'orangered', 'orange', 'yellow', 'greenyellow', 'green', 'turquoise', 'blue', 'indigo', 'purple'];
 let colorIndex = 0;
 
+/* Set up canvas */
+let canvas = resetCanvas(null);
+
 const n = 8; // number of layers to generate (actual number of layers will be 2n).
-var L = Math.pow(2, n); // pixel length of line segments in baseline.
+const L = Math.pow(2, n); // pixel length of line segments in baseline.
 document.getElementById('nslider').setAttribute('max', 2*(n-1)); // set number of slider points
 
 /* Generate baseline */
@@ -34,9 +31,53 @@ let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 //let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(3, 1), new Point(3,2), new Point(4, 2)]; // Spiral
 //let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]; // Squarepants
 //let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
-let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
+//let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
 //let baselineCoords = [new Point(1,1), new Point(2,1)] // Single segment
 
+lines = drawLines([new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]);
+
+var nslider = document.getElementById('nslider'); 
+var showAll = true;
+var showallButton = document.getElementById('showall');
+var animate = false;
+var doAnimate = document.getElementById('doAnimate');
+
+showallButton.oninput = function() {
+    showAll = !showallButton.checked;
+    updateVisibility();
+}
+
+nslider.oninput = function() {
+    updateVisibility();
+    updateAnimation();
+}
+
+doAnimate.oninput = function() {
+    animate = doAnimate.checked;
+    updateAnimation();
+}
+
+var preset1 = document.getElementById('preset1')
+preset1.onclick = function() {
+    canvas = resetCanvas(canvas);
+    drawLines([new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]);
+}
+
+function resetCanvas(thiscanvas) {
+    if (thiscanvas != null) {
+        document.getElementById('canvas-div').removeChild(thiscanvas);
+    }
+    thiscanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    thiscanvas.setAttributeNS(null, 'height', '100%');
+    thiscanvas.setAttributeNS(null, 'width', '100%');
+    thiscanvas.setAttributeNS(null, 'id', 'canvas');
+    document.getElementById('canvas-div').appendChild(thiscanvas);
+
+    colorIndex = 0;
+    return thiscanvas;
+}
+
+function drawLines(baselineCoords) {
 // Convert input coordinates to actual coordinates
 for (let i = 0; i < baselineCoords.length; i++) {
     baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
@@ -57,7 +98,7 @@ canvas.appendChild(baseline);
 
 let lines = [baseline]; // Array to store all generated layers
 
-/* Generate all layers */
+/* Generate remaining layers */
 let prevPoints = baselineCoords; // Stores coordinates of previous layer's line
 let points = []; // Stores coordinates of current layer's line
 
@@ -155,6 +196,9 @@ for (let i = 1; i < n; i++) {
     points = [];
 }
 
+return lines;
+}
+
 /**
  * Sets all of the initial visual attributes of the line.
  * @param {svg path} line -  the path object to manipulate.
@@ -169,27 +213,6 @@ function setVisuals(line, i) {
     line.setAttributeNS(null, 'stroke-dasharray', pathLength + ' ' + pathLength);
     line.setAttributeNS(null, 'stroke-dashoffset', 0);
     line.setAttribute('animation-play-state', 'paused');
-}
-
-var nslider = document.getElementById('nslider'); 
-var showAll = true;
-var showallButton = document.getElementById('showall');
-var animate = false;
-var doAnimate = document.getElementById('doAnimate');
-
-showallButton.oninput = function() {
-    showAll = !showallButton.checked;
-    updateVisibility();
-}
-
-nslider.oninput = function() {
-    updateVisibility();
-    updateAnimation();
-}
-
-doAnimate.oninput = function() {
-    animate = doAnimate.checked;
-    updateAnimation();
 }
 
 /*
