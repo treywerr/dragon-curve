@@ -24,19 +24,11 @@ nslider.setAttribute('max', 2*(n-1)); // set number of slider points
 /* Set up canvas */
 let canvas = resetCanvas(null);
 
-/* Generate baseline */
+/* Generate initial dragon curve */
 let baseline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-// Set of coordinates that defines the baseline
-//let baselineCoords = [new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0)]; // Corner
-//let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]; // Spiral
-//let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(3, 1), new Point(3,2), new Point(4, 2)]; // Spiral
-//let baselineCoords = [new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]; // Squarepants
-//let baselineCoords = [new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]; // Original
-//let baselineCoords = [new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]; // S curve
-//let baselineCoords = [new Point(1,1), new Point(2,1)] // Single segment
+let lines = drawLines([new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]); // Original
 
-lines = drawLines([new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)]); // Original
-
+/* oninput functions */
 var showAll = true;
 var showallButton = document.getElementById('showall');
 var animate = false;
@@ -44,17 +36,17 @@ var doAnimate = document.getElementById('doAnimate');
 
 showallButton.oninput = function() {
     showAll = !showallButton.checked;
-    updateVisibility();
+    updateVisibility(lines);
 }
 
 nslider.oninput = function() {
-    updateVisibility();
-    updateAnimation();
+    updateVisibility(lines);
+    updateAnimation(lines);
 }
 
 doAnimate.oninput = function() {
     animate = doAnimate.checked;
-    updateAnimation();
+    updateAnimation(lines);
 }
 
 var preset1 = document.getElementById('preset1')
@@ -70,51 +62,56 @@ preset2.onclick = function() {
 var preset3 = document.getElementById('preset3')
 preset3.onclick = function() {
     canvas = resetCanvas(canvas);
-    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]); // Spiral 1
+    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(2, 0), new Point(1,0), new Point(1, 1)]); // Spiral
 }
 var preset4 = document.getElementById('preset4')
 preset4.onclick = function() {
     canvas = resetCanvas(canvas);
-    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(3, 1), new Point(3,2), new Point(4, 2)]); // Squiggle
+    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(2, 2), new Point(2, 1), new Point(3, 1), new Point(3,2), new Point(4, 2)]); // Inchworm
 }
 var preset5 = document.getElementById('preset5')
 preset5.onclick = function() {
     canvas = resetCanvas(canvas);
-    lines = drawLines([new Point(1,1), new Point(2,1)]); // Single segment
+    lines = drawLines([new Point(1,1), new Point(2,1)]); // Line segment
 }
 var preset6 = document.getElementById('preset6')
 preset6.onclick = function() {
     canvas = resetCanvas(canvas);
-    lines = drawLines([new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]); // S curve
+    lines = drawLines([new Point(2,0), new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2), new Point(1,2)]); // Figure S
 }
 var preset7 = document.getElementById('preset7')
 preset7.onclick = function() {
     canvas = resetCanvas(canvas);
-    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]); // Squarepants
+    lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]); // Arch
 }
+
+/* Other Functions */
 
 /**
  * Resets the canvas
+ * @param {SVG Element | null} oldcanvas- the old canvas
+ * @return {SVG Element} - the new canvas
  */
-function resetCanvas(thiscanvas) {
-    if (thiscanvas != null) {
-        document.getElementById('canvas-div').removeChild(thiscanvas);
+function resetCanvas(oldcanvas) {
+    if (oldcanvas != null) {
+        document.getElementById('canvas-div').removeChild(oldcanvas);
     }
-    thiscanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    thiscanvas.setAttributeNS(null, 'height', '100%');
-    thiscanvas.setAttributeNS(null, 'width', '100%');
-    thiscanvas.setAttributeNS(null, 'id', 'canvas');
-    document.getElementById('canvas-div').appendChild(thiscanvas);
+    newcanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    newcanvas.setAttributeNS(null, 'height', '100%');
+    newcanvas.setAttributeNS(null, 'width', '100%');
+    newcanvas.setAttributeNS(null, 'id', 'canvas');
+    document.getElementById('canvas-div').appendChild(newcanvas);
 
+    // Reset other global vars
     colorIndex = 0;
-    nslider.value = 0;
-    return thiscanvas;
+
+    return newcanvas;
 }
 
 /**
  * Draws the entire dragon curve
- * @param {array of Points} - a properly formatted baseline coordinates array
- * @return an array of Elements that contains all of the lines
+ * @param {array of Points} baselineCoords - a properly formatted baseline coordinates array
+ * @return an array of SVG 'path' elements that contains all of the lines
  */
 function drawLines(baselineCoords) {
     // Convert input coordinates to actual coordinates
@@ -136,6 +133,7 @@ function drawLines(baselineCoords) {
     canvas.appendChild(baseline);
 
     let newlines = [baseline]; // Array to store all generated layers
+
 
     /* Generate remaining layers */
     let prevPoints = baselineCoords; // Stores coordinates of previous layer's line
@@ -224,7 +222,7 @@ function drawLines(baselineCoords) {
         newlines.push(diagline);
 
         line.setAttributeNS(null, 'd', data);
-        setVisuals(line, i);
+        setVisuals(line, i+1);
         canvas.appendChild(line);
         newlines.push(line);
 
@@ -233,47 +231,43 @@ function drawLines(baselineCoords) {
         points = [];
     }
 
+    updateAnimation(newlines);
+    updateVisibility(newlines);
     return newlines;
 }
 
 /**
  * Sets all of the initial visual attributes of the line.
  * @param {svg path} line -  the path object to manipulate.
- * @param {integer} i - the layer the line is being drawn on.
+ * @param {integer} i - the layer the line is being drawn on. (controls stroke width)
  */
 function setVisuals(line, i) {
     line.setAttributeNS(null, 'class', 'line'); // Allows animation to run
     line.setAttributeNS(null, 'stroke', colors[++colorIndex % colors.length]); // Makes the line colors cycle through an array of rainbow colors
-    line.setAttributeNS(null, 'visibility', 'hidden'); // Lines are hidden by default until revealed by slider input
-    line.setAttributeNS(null, 'stroke-width', n-i); // Lines get progressively thinner
+    line.setAttributeNS(null, 'stroke-width', n-i+1); // Lines get progressively thinner
     let pathLength = line.getTotalLength();
     line.setAttributeNS(null, 'stroke-dasharray', pathLength + ' ' + pathLength);
-    line.setAttributeNS(null, 'stroke-dashoffset', 0);
-    line.setAttribute('animation-play-state', 'paused');
 }
 
 /**
  * Updates the visibility of the layers based on the current value of the slider and the showAll boolean.
+ * @param {svg path array} lines - array of svg paths
  */
-function updateVisibility() {
-    console.log("length:"+lines.length);
-    console.log(lines);
+function updateVisibility(lines) {
     for (let i = 0; i < lines.length; i++) {
         if (i == nslider.value || (i < nslider.value && showAll)) {
-            console.log(i);
-            console.log(lines[i]);
             lines[i].setAttributeNS(null, 'visibility', 'visible');
         } else {
             lines[i].setAttributeNS(null, 'visibility', 'hidden');
         }
     }
-    console.log(lines[1]);
 }
 
 /**
  * Updates whether the drawing animation is running based on the animate boolean.
+ * @param {svg path array} lines - array of svg paths
  */
-function updateAnimation() {
+function updateAnimation(lines) {
     for (let i = 0; i < lines.length; i++) {
         if (animate) {
             lines[i].setAttributeNS(null, 'stroke-dashoffset', lines[i].getTotalLength());
