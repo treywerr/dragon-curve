@@ -84,8 +84,30 @@ preset7.onclick = function() {
     canvas = resetCanvas(canvas);
     lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]); // Arch
 }
+var custom = document.getElementById('custom');
+custom.onclick = function() {
+    canvas = resetCanvas(canvas);
+    createBaseline();
+}
 
-/* Other Functions */
+/* Custom baseline creation functions */
+
+function createBaseline() {
+    // Set starting point
+    let x = document.getElementById('canvas-div').offsetWidth/L - 1;
+    for (let i = 0; i < x; i++) {
+        for (let j = 0; j < x; j++) {
+            circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circ.setAttributeNS(null, 'cx', (i+1)*L+"");
+            circ.setAttributeNS(null, 'cy', (j+1)*L+"");
+            circ.setAttributeNS(null, 'r', '10');
+            circ.setAttributeNS(null, 'fill', 'red');
+            canvas.appendChild(circ);
+        }
+    }
+}
+
+/* Visual Update Functions */
 
 /**
  * Resets the canvas
