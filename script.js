@@ -12,6 +12,24 @@ class Point {
     }
 } // end class Point
 
+/**
+ * 
+ * @param {number} num - an integer coordinate to convert (should be divisible by L)
+ * @returns the passed number converted to simplified coordinates
+ */
+function toSimplified(num) {
+    return num/L - 1;
+}
+
+/**
+ * 
+ * @param {number} num - an integer coordinate to convert 
+ * @returns the passed number converted to actual page coordinates
+ */
+function toActual(num) {
+    return (num + 1) * L;
+}
+
 /* Global Vars */
 
 // Array of line colors to cycle through
@@ -89,46 +107,97 @@ preset7.onclick = function() {
     canvas = resetCanvas(canvas);
     lines = drawLines([new Point(0,1), new Point(0,2), new Point(1, 2), new Point(1, 1), new Point(2, 1), new Point(2, 2), new Point(3,2), new Point(3, 1), new Point(3,0), new Point(2,0), new Point(1,0), new Point(0,0), new Point(0,1)]); // Arch
 }
+
 var custom = document.getElementById('custom');
 custom.onclick = function() {
     canvas = resetCanvas(canvas);
     initializeCreateMode();
 }
+var drawButton = document.getElementById('draw-custom');
+drawButton.onclick = function() {
+    let newBaseline = selectedPoints;
+    canvas = resetCanvas(canvas);
+    lines = drawLines(newBaseline);
+}
 
-/* Custom baseline creation functions */
+/* Custom curve functions */
 let selectionCanvas;
-function initializeCreateMode() {
-    selectionCanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    selectionCanvas.setAttributeNS(null, 'height', '100%');
-    selectionCanvas.setAttributeNS(null, 'width', '100%');
-    selectionCanvas.setAttributeNS(null, 'id', 'selection-canvas');
-    canvas.appendChild(selectionCanvas);
+let canvasEdge = toSimplified(document.getElementById('canvas-div').offsetWidth);
 
-    // Set starting point
-    let x = document.getElementById('canvas-div').offsetWidth/L - 1;
-    for (let i = 0; i < x; i++) {
-        for (let j = 0; j < x; j++) {
-            circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circ.setAttributeNS(null, 'cx', (i+1)*L+"");
-            circ.setAttributeNS(null, 'cy', (j+1)*L+"");
-            circ.setAttributeNS(null, 'r', '10');
-            circ.setAttributeNS(null, 'class', 'unclicked-point');
-            circ.onmousedown = circleClicked;
-            selectionCanvas.appendChild(circ);
+function initializeCreateMode() {
+    resetSelectionCanvas();
+
+    // Create set of possible starting points
+    for (let i = 0; i < canvasEdge; i++) {
+        for (let j = 0; j < canvasEdge; j++) {
+            selectionCanvas.appendChild(createCircle(i, j));
         }
     }
     drawingCustomLine = true;
 }
 
 function circleClicked(event) {
-    
     let circ = event.target;
     circ.setAttributeNS(null, 'class', 'clicked-point');
-    selectedPoints.push(new Point(circ.cx.baseVal.value, circ.cy.baseVal.value));
+    circ.onmousedown = null;
+    canvas.appendChild(circ);
+    canvas.removeChild(selectionCanvas);
+    let newPoint = new Point(toSimplified(circ.cx.baseVal.value), toSimplified(circ.cy.baseVal.value));
+    selectedPoints.push(newPoint);
     console.log("Clicked!", selectedPoints);
+
+    // Place next selectable points
+    resetSelectionCanvas();
+    let tempPoints = [];
+    if (newPoint.x-1 >= 0) {
+        tempPoints.push(new Point(newPoint.x-1, newPoint.y));
+    }
+    if (newPoint.x+1 < canvasEdge) {
+        tempPoints.push(new Point(newPoint.x+1, newPoint.y));
+    }
+    if (newPoint.y-1 >= 0) {
+        tempPoints.push(new Point(newPoint.x, newPoint.y-1));
+    }
+    if (newPoint.y+1 < canvasEdge) {
+        tempPoints.push(new Point(newPoint.x, newPoint.y+1));
+    }
+
+    for (let i = 0; i < tempPoints.length; i++) {
+        let next = tempPoints[i];
+        if (selectedPoints.length >= 2) {
+            let prev = selectedPoints[selectedPoints.length-2];
+            if (next.x == prev.x && next.y == prev.y)
+                continue; // Prevents creation of a line that backtracks
+        }
+        selectionCanvas.appendChild(createCircle(next.x, next.y));
+    }
+    
+    // Reveal the draw button when there are enough points selected
+    let hidden = drawButton.getAttribute('hidden');
+    if (selectedPoints.length >= 2 && hidden) {
+        drawButton.removeAttribute('hidden');
+    }
 }
 
-/* Visual Update Functions */
+function createCircle(x, y) {
+    newCirc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    newCirc.setAttributeNS(null, 'cx', toActual(x)+"");
+    newCirc.setAttributeNS(null, 'cy', toActual(y)+"");
+    newCirc.setAttributeNS(null, 'r', '10');
+    newCirc.setAttributeNS(null, 'class', 'unclicked-point');
+    newCirc.onmousedown = circleClicked;
+    return newCirc;
+}
+
+function resetSelectionCanvas() {
+    selectionCanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    selectionCanvas.setAttributeNS(null, 'height', '100%');
+    selectionCanvas.setAttributeNS(null, 'width', '100%');
+    selectionCanvas.setAttributeNS(null, 'id', 'selection-canvas');
+    canvas.appendChild(selectionCanvas);
+}
+
+/* Main Visual Functions */
 
 /**
  * Resets the canvas
@@ -149,20 +218,23 @@ function resetCanvas(oldcanvas) {
     colorIndex = 0;
     drawingCustomLine = false;
     selectedPoints = [];
+    document.getElementById('draw-custom').setAttribute('hidden', 'hidden');
 
     return newcanvas;
 }
 
 /**
  * Draws the entire dragon curve
- * @param {array of Points} baselineCoords - a properly formatted baseline coordinates array
+ * @param {array of Points} baselineCoords - an array of Points whose coordinates are in simplified form
  * @return an array of SVG 'path' elements that contains all of the lines
  */
 function drawLines(baselineCoords) {
     // Convert input coordinates to actual coordinates
     for (let i = 0; i < baselineCoords.length; i++) {
-        baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
-        baselineCoords[i].y = (baselineCoords[i].y + 1)*L;
+        // baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
+        // baselineCoords[i].y = (baselineCoords[i].y + 1)*L;
+        baselineCoords[i].x = toActual(baselineCoords[i].x);
+        baselineCoords[i].y = toActual(baselineCoords[i].y);
     }
 
     // Generate data string that encodes the svg line
