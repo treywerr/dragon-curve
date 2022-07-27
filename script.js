@@ -12,6 +12,8 @@ class Point {
     }
 } // end class Point
 
+/* Global Vars */
+
 // Array of line colors to cycle through
 let colors = ['red', 'orangered', 'orange', 'yellow', 'greenyellow', 'green', 'turquoise', 'blue', 'indigo', 'purple'];
 let colorIndex = 0;
@@ -20,6 +22,9 @@ const n = 8; // number of layers to generate (actual number of layers will be 2n
 const L = Math.pow(2, n); // pixel length of line segments in baseline.
 var nslider = document.getElementById('nslider'); 
 nslider.setAttribute('max', 2*(n-1)); // set number of slider points
+
+let selectedPoints = [];
+let drawingCustomLine = false;
 
 /* Set up canvas */
 let canvas = resetCanvas(null);
@@ -87,12 +92,18 @@ preset7.onclick = function() {
 var custom = document.getElementById('custom');
 custom.onclick = function() {
     canvas = resetCanvas(canvas);
-    createBaseline();
+    initializeCreateMode();
 }
 
 /* Custom baseline creation functions */
+let selectionCanvas;
+function initializeCreateMode() {
+    selectionCanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    selectionCanvas.setAttributeNS(null, 'height', '100%');
+    selectionCanvas.setAttributeNS(null, 'width', '100%');
+    selectionCanvas.setAttributeNS(null, 'id', 'selection-canvas');
+    canvas.appendChild(selectionCanvas);
 
-function createBaseline() {
     // Set starting point
     let x = document.getElementById('canvas-div').offsetWidth/L - 1;
     for (let i = 0; i < x; i++) {
@@ -101,10 +112,20 @@ function createBaseline() {
             circ.setAttributeNS(null, 'cx', (i+1)*L+"");
             circ.setAttributeNS(null, 'cy', (j+1)*L+"");
             circ.setAttributeNS(null, 'r', '10');
-            circ.setAttributeNS(null, 'fill', 'red');
-            canvas.appendChild(circ);
+            circ.setAttributeNS(null, 'class', 'unclicked-point');
+            circ.onmousedown = circleClicked;
+            selectionCanvas.appendChild(circ);
         }
     }
+    drawingCustomLine = true;
+}
+
+function circleClicked(event) {
+    
+    let circ = event.target;
+    circ.setAttributeNS(null, 'class', 'clicked-point');
+    selectedPoints.push(new Point(circ.cx.baseVal.value, circ.cy.baseVal.value));
+    console.log("Clicked!", selectedPoints);
 }
 
 /* Visual Update Functions */
@@ -126,6 +147,8 @@ function resetCanvas(oldcanvas) {
 
     // Reset other global vars
     colorIndex = 0;
+    drawingCustomLine = false;
+    selectedPoints = [];
 
     return newcanvas;
 }
