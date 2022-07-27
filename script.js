@@ -13,7 +13,6 @@ class Point {
 } // end class Point
 
 /**
- * 
  * @param {number} num - an integer coordinate to convert (should be divisible by L)
  * @returns the passed number converted to simplified coordinates
  */
@@ -22,7 +21,6 @@ function toSimplified(num) {
 }
 
 /**
- * 
  * @param {number} num - an integer coordinate to convert 
  * @returns the passed number converted to actual page coordinates
  */
@@ -41,8 +39,7 @@ const L = Math.pow(2, n); // pixel length of line segments in baseline.
 var nslider = document.getElementById('nslider'); 
 nslider.setAttribute('max', 2*(n-1)); // set number of slider points
 
-let selectedPoints = [];
-let drawingCustomLine = false;
+let selectedPoints = []; // Used in custom curve creation.
 
 /* Set up canvas */
 let canvas = resetCanvas(null);
@@ -124,8 +121,11 @@ drawButton.onclick = function() {
 let selectionCanvas;
 let canvasEdge = toSimplified(document.getElementById('canvas-div').offsetWidth);
 
+/**
+ * Initialization for the custom curve creation process.
+ */
 function initializeCreateMode() {
-    resetSelectionCanvas();
+    resetSelectionCanvas(); // Initialize selectionCanvas
 
     // Create set of possible starting points
     for (let i = 0; i < canvasEdge; i++) {
@@ -133,9 +133,12 @@ function initializeCreateMode() {
             selectionCanvas.appendChild(createCircle(i, j));
         }
     }
-    drawingCustomLine = true;
 }
 
+/**
+ * Performs the logic and interaction of the user drawing a custom curve.
+ * @param {Event} event - an onmousedown event triggered by a selection circle; passed automatically when event triggers
+ */
 function circleClicked(event) {
     let circ = event.target;
     circ.setAttributeNS(null, 'class', 'clicked-point');
@@ -172,13 +175,19 @@ function circleClicked(event) {
         selectionCanvas.appendChild(createCircle(next.x, next.y));
     }
     
-    // Reveal the draw button when there are enough points selected
+    // Reveal the draw button when there are enough points to draw a new dragon curve
     let hidden = drawButton.getAttribute('hidden');
     if (selectedPoints.length >= 2 && hidden) {
         drawButton.removeAttribute('hidden');
     }
 }
 
+/**
+ * Creates a new clickable svg circle at the given simplified coordinates.
+ * @param {number} x 
+ * @param {number} y 
+ * @returns The created circle element
+ */
 function createCircle(x, y) {
     newCirc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     newCirc.setAttributeNS(null, 'cx', toActual(x)+"");
@@ -189,6 +198,9 @@ function createCircle(x, y) {
     return newCirc;
 }
 
+/**
+ * Resets the svg canvas that contains the temporary clickable circles used in custom curve drawing.
+ */
 function resetSelectionCanvas() {
     selectionCanvas = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     selectionCanvas.setAttributeNS(null, 'height', '100%');
@@ -200,9 +212,9 @@ function resetSelectionCanvas() {
 /* Main Visual Functions */
 
 /**
- * Resets the canvas
- * @param {SVG Element | null} oldcanvas- the old canvas
- * @return {SVG Element} - the new canvas
+ * Resets the canvas.
+ * @param {SVG | null} oldcanvas- the old canvas
+ * @return {SVG} - the new canvas
  */
 function resetCanvas(oldcanvas) {
     if (oldcanvas != null) {
@@ -216,7 +228,6 @@ function resetCanvas(oldcanvas) {
 
     // Reset other global vars
     colorIndex = 0;
-    drawingCustomLine = false;
     selectedPoints = [];
     document.getElementById('draw-custom').setAttribute('hidden', 'hidden');
 
@@ -225,14 +236,13 @@ function resetCanvas(oldcanvas) {
 
 /**
  * Draws the entire dragon curve
- * @param {array of Points} baselineCoords - an array of Points whose coordinates are in simplified form
+ * @param {Points[]} baselineCoords - an array of Points whose coordinates are in simplified form
  * @return an array of SVG 'path' elements that contains all of the lines
  */
 function drawLines(baselineCoords) {
+
     // Convert input coordinates to actual coordinates
     for (let i = 0; i < baselineCoords.length; i++) {
-        // baselineCoords[i].x = (baselineCoords[i].x + 1)*L;
-        // baselineCoords[i].y = (baselineCoords[i].y + 1)*L;
         baselineCoords[i].x = toActual(baselineCoords[i].x);
         baselineCoords[i].y = toActual(baselineCoords[i].y);
     }
@@ -250,7 +260,6 @@ function drawLines(baselineCoords) {
     canvas.appendChild(baseline);
 
     let newlines = [baseline]; // Array to store all generated layers
-
 
     /* Generate remaining layers */
     let prevPoints = baselineCoords; // Stores coordinates of previous layer's line
@@ -355,7 +364,7 @@ function drawLines(baselineCoords) {
 
 /**
  * Sets all of the initial visual attributes of the line.
- * @param {svg path} line -  the path object to manipulate.
+ * @param {SVGPathElement} line -  the path object to manipulate.
  * @param {integer} i - the layer the line is being drawn on. (controls stroke width)
  */
 function setVisuals(line, i) {
@@ -368,7 +377,7 @@ function setVisuals(line, i) {
 
 /**
  * Updates the visibility of the layers based on the current value of the slider and the showAll boolean.
- * @param {svg path array} lines - array of svg paths
+ * @param {SVGPathElement[]} lines - array of svg paths
  */
 function updateVisibility(lines) {
     for (let i = 0; i < lines.length; i++) {
@@ -382,7 +391,7 @@ function updateVisibility(lines) {
 
 /**
  * Updates whether the drawing animation is running based on the animate boolean.
- * @param {svg path array} lines - array of svg paths
+ * @param {SVGPathElement[]} lines - array of svg paths
  */
 function updateAnimation(lines) {
     for (let i = 0; i < lines.length; i++) {
